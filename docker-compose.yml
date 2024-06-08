@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # service 1
+  asr:
+    build: 
+      context: ./ASR/
+      dockerfile: ./Dockerfile
+    command: python main.py
+    volumes:
+      - ./ASR:/app/
+    ports:
+      - 8000:8000
+    depends_on:
+      - broker
+    
+  # service 1
+  asr_consumer:
+    build: 
+      context: ./ASR/
+      dockerfile: ./Dockerfile
+    command: python consumer.py
+    volumes:
+      - ./ASR:/app/
+    depends_on:
+      - broker
+    restart:
+      on-failure
+
+
+  #service 2
+  traslate:
+    build: 
+      context: ./Translate/
+      dockerfile: ./Dockerfile
+    command: python broker.py
+    volumes:
+      - ./Translate:/app/
+
+    depends_on:
+      - broker
+    restart:
+      on-failure
+  
+
+  broker:
+    image: rabbitmq:3.12-management
+    ports:
+      - 15672:15672
+    volumes:
+      - asr_rabbitmq_data:/var/lib/rabbitmq
+      - asr_raabbitmq_log:/var/log/rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+
+
+
+volumes:
+  asr_rabbitmq_data:
+  asr_raabbitmq_log:
+
